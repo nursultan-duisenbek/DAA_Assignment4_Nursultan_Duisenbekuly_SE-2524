@@ -20,4 +20,21 @@ final class Stats {
         }
         return (sorted[middle - 1] + sorted[middle]) / 2.0;
     }
+
+    /**
+     * Nearest-rank percentile: the smallest value that is at least as large as the given percent of all values.
+     * percentile(values, 0) is the minimum and percentile(values, 100) is the maximum.
+     */
+    static double percentile(double[] values, double percent) {
+        if (values.length == 0) {
+            throw new IllegalArgumentException("Cannot take a percentile of no values.");
+        }
+        if (percent < 0 || percent > 100) {
+            throw new IllegalArgumentException("The percent must be between 0 and 100, got " + percent);
+        }
+        double[] sorted = values.clone();
+        Arrays.sort(sorted);
+        int rank = (int) Math.ceil(percent / 100.0 * sorted.length);
+        return sorted[Math.max(rank, 1) - 1];
+    }
 }

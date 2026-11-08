@@ -41,4 +41,29 @@ class StatsTest {
     void medianOfNothingIsRejected() {
         assertThrows(IllegalArgumentException.class, () -> Stats.median(new double[0]));
     }
+
+    @Test
+    void percentileUsesTheNearestRank() {
+        double[] oneToTen = {7, 3, 10, 1, 5, 9, 2, 8, 4, 6};
+        assertEquals(1.0, Stats.percentile(oneToTen, 0), 0.0, "0% is the minimum");
+        assertEquals(1.0, Stats.percentile(oneToTen, 5), 0.0, "rank ceil(0.5) = 1");
+        assertEquals(5.0, Stats.percentile(oneToTen, 50), 0.0, "rank 5");
+        assertEquals(9.0, Stats.percentile(oneToTen, 90), 0.0, "rank 9");
+        assertEquals(10.0, Stats.percentile(oneToTen, 95), 0.0, "rank ceil(9.5) = 10");
+        assertEquals(10.0, Stats.percentile(oneToTen, 100), 0.0, "100% is the maximum");
+    }
+
+    @Test
+    void percentileDoesNotReorderTheCallersArray() {
+        double[] values = {3, 1, 2};
+        Stats.percentile(values, 50);
+        assertArrayEquals(new double[]{3, 1, 2}, values, 0.0);
+    }
+
+    @Test
+    void percentileOfNothingOrOutsideZeroToHundredIsRejected() {
+        assertThrows(IllegalArgumentException.class, () -> Stats.percentile(new double[0], 50));
+        assertThrows(IllegalArgumentException.class, () -> Stats.percentile(new double[]{1}, -1));
+        assertThrows(IllegalArgumentException.class, () -> Stats.percentile(new double[]{1}, 100.5));
+    }
 }
