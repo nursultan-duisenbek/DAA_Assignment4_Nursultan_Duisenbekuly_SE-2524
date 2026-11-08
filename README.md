@@ -8,7 +8,7 @@ The project has three edit distance versions (recursive, table, two rows), Naive
 
 JDK 17 or newer and Maven 3.6.3 or newer. The plots are drawn with Java's own 2D classes, so no charting library is downloaded. On a minimal Linux install the JDK may need fontconfig and a font package (for example `fonts-dejavu-core`) to draw text. Without fonts the tests that draw charts are skipped, and the experiment cannot write plots.
 
-## Build and test
+## Build
 
 Run everything from the project folder.
 
@@ -16,7 +16,15 @@ Run everything from the project folder.
 mvn clean package
 ```
 
-This compiles the code, runs all tests and builds `target/daa-assignment4-1.0.jar`. `mvn test` runs only the tests.
+This compiles the code, runs all tests and builds `target/daa-assignment4-1.0.jar`.
+
+## Run the tests
+
+```
+mvn test
+```
+
+The tests check the reference values of the assignment (kitten and sitting, the LPS arrays, the search matches), the three edit distance versions against each other on 100 random pairs, Naive against KMP on 100 random texts, empty and too-long patterns, that KMP never reads the text backwards, the counters against their formulas, that the generator is deterministic, and that a quick version of the experiment writes its files and plots.
 
 ## Run the experiment
 
@@ -50,10 +58,6 @@ A full run overwrites `results/results.csv`, `results/summary.csv` and the plots
 ## Reproducibility
 
 The seed is 42. Each case derives its own seed from it, so the same command builds the same strings and gives the same counters on every machine. Times depend on the machine and change from run to run. Each case is timed five times after a warm-up and the plots use the median.
-
-## Tests
-
-The tests check the reference values of the assignment (kitten and sitting, the LPS arrays, the search matches), the three edit distance versions against each other on 100 random pairs, Naive against KMP on 100 random texts, empty and too-long patterns, that KMP never reads the text backwards, the counters against their formulas, that the generator is deterministic, and that a quick version of the experiment writes its files and plots.
 
 ## AI-use acknowledgement
 
