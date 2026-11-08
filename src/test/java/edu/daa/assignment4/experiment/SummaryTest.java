@@ -4,15 +4,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import edu.daa.assignment4.Counters;
 
 class SummaryTest {
+
+    @TempDir
+    Path folder;
 
     private static Counters counters(long subproblems, long memoryCells, long comparisons, long lpsComparisons) {
         Counters c = new Counters();
@@ -126,5 +133,63 @@ class SummaryTest {
         assertEquals(14, Summary.HEADER.split(",").length);
         assertEquals(14, line.split(",", -1).length);
         assertTrue(line.startsWith("edit_distance,table,random,12,12,3,2.000000,1.000000,3.000000,9,169,169,,"), line);
+    }
+
+    @Test
+    void csvLineReadsBackToTheSameSummary() {
+        List<Row> rows = new ArrayList<>();
+        double[] times = {0.5, 0.25, 1.125};
+        for (int run = 1; run <= 3; run++) {
+            rows.add(Row.search("kmp", counters(0, 64, 1_000_000, 126), "worst_case", 1_000_000, 64, run, times[run - 1], 0));
+        }
+        Summary original = Summary.aggregate(rows).get(0);
+        Summary read = Summary.fromCsv(original.toCsv());
+        assertEquals(original.family(), read.family());
+        assertEquals(original.algorithm(), read.algorithm());
+        assertEquals(original.input(), read.input());
+        assertEquals(original.n(), read.n());
+        assertEquals(original.m(), read.m());
+        assertEquals(original.runs(), read.runs());
+        assertEquals(original.medianMs(), read.medianMs(), 1e-6);
+        assertEquals(original.minMs(), read.minMs(), 1e-6);
+        assertEquals(original.maxMs(), read.maxMs(), 1e-6);
+        assertEquals(original.result(), read.result());
+        assertEquals(Row.NA, read.subproblems(), "an empty counter field is read back as not applicable");
+        assertEquals(64, read.memoryCells());
+        assertEquals(1_000_000, read.comparisons());
+        assertEquals(126, read.lpsComparisons());
+    }
+
+    @Test
+    void fromCsvRejectsALineWithTheWrongNumberOfFields() {
+        assertThrows(IllegalArgumentException.class, () -> Summary.fromCsv("edit_distance,table,random,12"));
+    }
+
+    @Test
+    void summaryFileIsReadBackLineForLine() throws IOException {
+        List<Row> rows = new ArrayList<>();
+        for (int run = 1; run <= 3; run++) {
+            rows.add(editRow("table", 12, run, run));
+            rows.add(Row.edit("recursive", counters(377, 0, 0, 0), "disjoint", 12, run, 2 * run, 12));
+        }
+        List<Summary> written = Summary.aggregate(rows);
+        List<String> lines = new ArrayList<>();
+        lines.add(Summary.HEADER);
+        written.forEach(s -> lines.add(s.toCsv()));
+        Path file = folder.resolve("summary.csv");
+        Files.write(file, lines);
+
+        List<Summary> read = Summary.readCsv(file);
+        assertEquals(written.size(), read.size());
+        assertEquals("recursive", read.get(1).algorithm());
+        assertEquals(377, read.get(1).subproblems());
+        assertEquals(0, read.get(1).memoryCells());
+    }
+
+    @Test
+    void aFileWithAnotherHeaderIsRefused() throws IOException {
+        Path file = folder.resolve("other.csv");
+        Files.writeString(file, "algorithm,input,n,time_ms\nkmp,random,1,2\n");
+        assertThrows(IOException.class, () -> Summary.readCsv(file));
     }
 }

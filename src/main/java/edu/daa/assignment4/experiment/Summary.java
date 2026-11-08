@@ -1,5 +1,9 @@
 package edu.daa.assignment4.experiment;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -50,6 +54,36 @@ public record Summary(String family, String algorithm, String input, int n, int 
                     first.subproblems(), first.memoryCells(), first.comparisons(), first.lpsComparisons()));
         }
         return summaries;
+    }
+
+    /** Reads one line written by {@link #toCsv()}. Empty counter fields come back as {@link Row#NA}. */
+    static Summary fromCsv(String line) {
+        String[] f = line.split(",", -1);
+        if (f.length != 14) {
+            throw new IllegalArgumentException("Expected 14 fields but found " + f.length + ": " + line);
+        }
+        return new Summary(f[0], f[1], f[2], Integer.parseInt(f[3]), Integer.parseInt(f[4]), Integer.parseInt(f[5]),
+                Double.parseDouble(f[6]), Double.parseDouble(f[7]), Double.parseDouble(f[8]), Long.parseLong(f[9]),
+                counter(f[10]), counter(f[11]), counter(f[12]), counter(f[13]));
+    }
+
+    /** Reads a whole summary.csv, so the plots can be redrawn without measuring again. */
+    static List<Summary> readCsv(Path file) throws IOException {
+        List<String> lines = Files.readAllLines(file, StandardCharsets.UTF_8);
+        if (lines.isEmpty() || !lines.get(0).equals(HEADER)) {
+            throw new IOException(file + " is not a summary.csv written by this program (unexpected header).");
+        }
+        List<Summary> summaries = new ArrayList<>();
+        for (String line : lines.subList(1, lines.size())) {
+            if (!line.isBlank()) {
+                summaries.add(fromCsv(line));
+            }
+        }
+        return summaries;
+    }
+
+    private static long counter(String field) {
+        return field.isEmpty() ? Row.NA : Long.parseLong(field);
     }
 
     String toCsv() {
