@@ -167,7 +167,7 @@ class ExperimentSmokeTest {
                 plots.stream().map(Plots.Plot::fileName).collect(Collectors.toList()));
         for (Plots.Plot plot : plots) {
             BufferedImage image = ImageIO.read(folder.resolve("plots").resolve(plot.fileName()).toFile());
-            assertEquals(1880, image.getWidth(), plot.fileName());
+            assertEquals(LineChart.IMAGE_WIDTH, image.getWidth(), plot.fileName());
             assertTrue(countNear(image, LineChart.BLUE) > 300, plot.fileName() + " has blue data");
             assertTrue(countNear(image, LineChart.ORANGE) > 300, plot.fileName() + " has orange data");
         }

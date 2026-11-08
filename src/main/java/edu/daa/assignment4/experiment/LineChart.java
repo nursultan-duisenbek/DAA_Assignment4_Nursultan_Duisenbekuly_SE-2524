@@ -82,21 +82,24 @@ final class LineChart {
     // ------------------------------------------------------------------ geometry and fonts (logical pixels)
 
     private static final int SCALE = 2;
-    private static final int WIDTH = 940;
+    private static final int WIDTH = 880;
     private static final int PAD = 24;
-    private static final int PLOT_HEIGHT = 360;
-    private static final int LEGEND_ROW = 24;
+    /** Width in pixels of every PNG this class writes. */
+    static final int IMAGE_WIDTH = WIDTH * SCALE;
+    private static final int PLOT_HEIGHT = 330;
+    private static final int LEGEND_ROW = 25;
     private static final int LEGEND_SWATCH = 28;
     private static final double MARKER_RADIUS = 4.5;
-    private static final double LABEL_GAP = 17;
-    private static final double FOOTNOTE_LINE = 15;
+    private static final double LABEL_GAP = 18;
+    private static final double FOOTNOTE_LINE = 16;
+    private static final double CAPTION_LINE = 22;
 
-    private static final Font TITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 18);
-    private static final Font TEXT_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 13);
-    private static final Font VALUE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 13);
-    private static final Font TICK_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
-    private static final Font CAPTION_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 14);
-    private static final Font NOTE_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 11);
+    private static final Font TITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 19);
+    private static final Font TEXT_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 14);
+    private static final Font VALUE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 14);
+    private static final Font TICK_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 13);
+    private static final Font CAPTION_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 15);
+    private static final Font NOTE_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
 
     // ------------------------------------------------------------------ content
 
@@ -472,7 +475,7 @@ final class LineChart {
         if (!caption.isBlank()) {
             l.captionLines = wrap(caption, captionFm, WIDTH - 2.0 * PAD);
             l.captionBaseline = next;
-            next += (l.captionLines.size() - 1) * 21 + 30;
+            next += (l.captionLines.size() - 1) * CAPTION_LINE + 30;
         }
         l.footnoteBaseline = next;
         if (!footnote.isBlank()) {
@@ -586,7 +589,7 @@ final class LineChart {
         g.setFont(CAPTION_FONT);
         g.setColor(INK);
         for (int i = 0; i < l.captionLines.size(); i++) {
-            g.drawString(l.captionLines.get(i), PAD, (float) (l.captionBaseline + i * 21));
+            g.drawString(l.captionLines.get(i), PAD, (float) (l.captionBaseline + i * CAPTION_LINE));
         }
         g.setFont(NOTE_FONT);
         g.setColor(INK_2);

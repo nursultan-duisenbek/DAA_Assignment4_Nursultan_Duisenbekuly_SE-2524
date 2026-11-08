@@ -154,7 +154,7 @@ class LineChartTest {
         chart.write(file);
 
         BufferedImage image = ImageIO.read(file.toFile());
-        assertEquals(940 * 2, image.getWidth());
+        assertEquals(LineChart.IMAGE_WIDTH, image.getWidth());
         assertTrue(image.getHeight() > 600, "height " + image.getHeight());
         assertEquals(0xfcfcfb, image.getRGB(2, 2) & 0xffffff, "background");
         assertTrue(countNear(image, LineChart.BLUE, 6) > 500, "blue series is drawn");
