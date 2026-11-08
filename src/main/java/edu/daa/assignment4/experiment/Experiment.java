@@ -27,8 +27,9 @@ import edu.daa.assignment4.search.StringSearch;
  *   <li>results/plots/*.png, the plots drawn from the summary, and plots/captions.txt with the sentence under each.</li>
  * </ul>
  *
- * Usage: {@code Experiment [--quick] [--out FOLDER]}. {@code --quick} runs a tiny version to check that everything
- * works; it writes to target/quick-results unless --out says otherwise, so it never overwrites the real results.
+ * Usage: {@code Experiment [--quick] [--plots-only] [--out FOLDER]}. {@code --quick} runs a tiny version to check that
+ * everything works; it writes to target/quick-results unless --out says otherwise, so it never overwrites the real
+ * results. {@code --plots-only} redraws the plots from an existing summary.csv without measuring again.
  */
 public final class Experiment {
 
@@ -44,20 +45,27 @@ public final class Experiment {
     public static void main(String[] args) throws IOException {
         Config config = Config.full();
         Path out = null;
+        boolean plotsOnly = false;
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--quick")) {
                 config = Config.quick();
+            } else if (args[i].equals("--plots-only")) {
+                plotsOnly = true;
             } else if (args[i].equals("--out") && i + 1 < args.length) {
                 out = Path.of(args[++i]);
             } else {
-                System.err.println("Usage: Experiment [--quick] [--out FOLDER]");
+                System.err.println("Usage: Experiment [--quick] [--plots-only] [--out FOLDER]");
                 System.exit(2);
             }
         }
         if (out == null) {
             out = config.name().equals("quick") ? Path.of("target", "quick-results") : Path.of("results");
         }
-        run(config, out, System.out);
+        if (plotsOnly) {
+            redraw(config, out, System.out);
+        } else {
+            run(config, out, System.out);
+        }
     }
 
     /** Runs the whole experiment and writes all files into the folder. */
@@ -75,6 +83,22 @@ public final class Experiment {
         Files.writeString(folder.resolve("environment.txt"), environment(config), StandardCharsets.UTF_8);
         log.println("Wrote " + rows.size() + " rows to results.csv and " + summaries.size() + " cases to summary.csv");
 
+        return drawPlots(summaries, config, folder, log);
+    }
+
+    /**
+     * Redraws the plots and captions from an existing summary.csv, without measuring anything. Use it when only
+     * the look of the plots changes.
+     */
+    static List<Plots.Plot> redraw(Config config, Path folder, PrintStream log) throws IOException {
+        System.setProperty("java.awt.headless", "true");
+        Path summaryFile = folder.resolve("summary.csv");
+        log.println("Redrawing the plots of configuration '" + config.name() + "' from " + summaryFile.toAbsolutePath().normalize());
+        return drawPlots(Summary.readCsv(summaryFile), config, folder, log);
+    }
+
+    private static List<Plots.Plot> drawPlots(List<Summary> summaries, Config config, Path folder, PrintStream log)
+            throws IOException {
         List<Plots.Plot> plots = Plots.write(summaries, config, folder.resolve("plots"));
         StringBuilder captions = new StringBuilder();
         for (Plots.Plot plot : plots) {

@@ -185,4 +185,36 @@ class ExperimentSmokeTest {
         assertTrue(editPlot.caption().contains("13,483 calls on disjoint strings"), editPlot.caption()); // (3*8989-1)/2 at n = 6
         assertTrue(editPlot.caption().contains("filled 49 cells on every input"), editPlot.caption());
     }
+
+    @Test
+    void plotsCanBeRedrawnFromTheSummaryFileWithoutMeasuringAgain() throws IOException {
+        Assumptions.assumeTrue(canDrawText(), "this Java installation cannot draw text (no fonts), so plots cannot be written");
+        Config config = Config.quick();
+        List<Plots.Plot> first = Experiment.run(config, folder, QUIET);
+        byte[] results = Files.readAllBytes(folder.resolve("results.csv"));
+        byte[] summary = Files.readAllBytes(folder.resolve("summary.csv"));
+        for (Plots.Plot plot : first) {
+            Files.delete(folder.resolve("plots").resolve(plot.fileName()));
+        }
+
+        List<Plots.Plot> again = Experiment.redraw(config, folder, QUIET);
+
+        assertEquals(first.size(), again.size());
+        for (Plots.Plot plot : again) {
+            assertTrue(Files.size(folder.resolve("plots").resolve(plot.fileName())) > 10_000, plot.fileName() + " was drawn again");
+        }
+        // The two plots drawn from counters read exactly the same numbers back; the two drawn from times are
+        // computed from times rounded to a nanosecond in the CSV, so only their shape is compared.
+        assertEquals(first.get(0).caption(), again.get(0).caption());
+        assertEquals(first.get(2).caption(), again.get(2).caption());
+        assertTrue(again.get(1).caption().endsWith(".") && again.get(3).caption().endsWith("."));
+        // Redrawing must not touch the measurements.
+        assertEquals(java.util.Arrays.hashCode(results), java.util.Arrays.hashCode(Files.readAllBytes(folder.resolve("results.csv"))));
+        assertEquals(java.util.Arrays.hashCode(summary), java.util.Arrays.hashCode(Files.readAllBytes(folder.resolve("summary.csv"))));
+    }
+
+    @Test
+    void redrawingWithoutASummaryFileFailsClearly() {
+        org.junit.jupiter.api.Assertions.assertThrows(IOException.class, () -> Experiment.redraw(Config.quick(), folder, QUIET));
+    }
 }
